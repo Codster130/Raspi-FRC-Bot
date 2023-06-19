@@ -1,0 +1,8 @@
+[
+{
+  "directory": "C:/Users/Cody Raposa/OneDrive - Wentworth Institute of Technology/Desktop/Everything/UTAP Code/UCTOC-FRC-Bot-Without-FRC-Hardware/build",
+  "command": "C:\\msys64\\mingw64\\bin\\c++.exe -I\"C:/Users/Cody Raposa/OneDrive - Wentworth Institute of Technology/Desktop/Everything/UTAP Code/UCTOC-FRC-Bot-Without-FRC-Hardware/CTRE-Phoenix-Stuff/include\" -g   -std=c++11 -o CMakeFiles\\example.dir\\radio_test.cpp.obj -c \"C:\\Users\\Cody Raposa\\OneDrive - Wentworth Institute of Technology\\Desktop\\Everything\\UTAP Code\\UCTOC-FRC-Bot-Without-FRC-Hardware\\CTRE-Phoenix-Stuff\\radio_test.cpp\"",
+  "file": "C:\\Users\\Cody Raposa\\OneDrive - Wentworth Institute of Technology\\Desktop\\Everything\\UTAP Code\\UCTOC-FRC-Bot-Without-FRC-Hardware\\CTRE-Phoenix-Stuff\\radio_test.cpp",
+  "output": "CMakeFiles\\example.dir\\radio_test.cpp.obj"
+}
+]

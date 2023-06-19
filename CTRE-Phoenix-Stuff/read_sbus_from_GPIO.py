@@ -3,7 +3,7 @@ import bitarray as ba
 import bitarray.util as bau
 import time
 
-#PACKET REFERENCE
+# PACKET REFERENCE
 
 #  UART packet          UART packet 2
 #                                Parity

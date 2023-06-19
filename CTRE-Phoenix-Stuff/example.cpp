@@ -4,7 +4,6 @@
 #include "ctre/phoenix/platform/Platform.h"
 #include "ctre/phoenix/unmanaged/Unmanaged.h"
 #include "ctre/phoenix/cci/Unmanaged_CCI.h"
-#include "/usr/include/python3.7m/Python.h"
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -48,15 +47,6 @@ int main() {
 
 	/* setup drive */
 	initDrive();
-
-	Py_Initialize();
-
-	//Run a simple file
-	FILE* PScriptFile = fopen("test.py", "r");
-	if(PScriptFile){
-		PyRun_SimpleFile(PScriptFile, "test.py");
-		fclose(PScriptFile);
-	}
 
 	while (true) {
 		/* we are looking for gamepad (first time or after disconnect),
@@ -141,6 +131,5 @@ int main() {
 	}
 
 	SDL_Quit();
-	Py_Finalize();
 	return 0;
 }
