@@ -17,7 +17,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package (Threads REQUIRED)
-find_package(SDL2 REQUIRED)
+#find_package(SDL2 REQUIRED)
 
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}/include")
@@ -40,7 +40,7 @@ target_link_libraries(example ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
 target_link_libraries(example ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixTools.so)
 
 target_link_libraries(example Threads::Threads)
-target_link_libraries(example ${SDL2_LIBRARIES})
+#target_link_libraries(example ${SDL2_LIBRARIES})
 target_link_libraries(example ${PROJECT_SOURCE_DIR}/raspberry-sbus libsbus)
 
 add_custom_command(TARGET example POST_BUILD
