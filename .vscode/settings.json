@@ -58,7 +58,15 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "condition_variable": "cpp",
+        "cstdarg": "cpp",
+        "cstring": "cpp",
+        "map": "cpp",
+        "fstream": "cpp",
+        "future": "cpp",
+        "mutex": "cpp",
+        "cinttypes": "cpp"
     },
     "cmake.configureOnOpen": true
 }
