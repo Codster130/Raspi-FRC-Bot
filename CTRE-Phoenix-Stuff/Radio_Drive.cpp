@@ -9,30 +9,15 @@
 #include <thread>
 #include <unistd.h>
 #include <memory>
+#include <iomanip>
+#include <stdlib.h>
+#include <stdio.h>
 #include <curl/curl.h>
 #include <json/json.h>
 #include "SBUS.h"
-
-struct LLTrackingData
-{
-    int fID;
-    float tx;
-    float ty;
-};
-
-namespace
-{
-    std::size_t callback(
-            const char* in,
-            std::size_t size,
-            std::size_t num,
-            std::string* out)
-    {
-        const std::size_t totalBytes(size * num);
-        out->append(in, totalBytes);
-        return totalBytes;
-    }
-}
+#include "navXTimeSync/AHRS.h"
+#include <signal.h>
+#include "Read_Json/Read_JSON.h"
 
 using namespace ctre::phoenix;
 using namespace ctre::phoenix::platform;
@@ -46,10 +31,16 @@ using std::string;
 using std::chrono::steady_clock;
 using std::chrono::milliseconds;
 
+volatile sig_atomic_t sflag = 0;
+
+void handle_sig(int sig)
+{
+    sflag = 1;
+}
+
 static SBUS sbus;
-LLTrackingData Data;
-CURL* curl;
-CURLcode res;
+LLTD::ReadJSON jsonReader;
+sbus_packet_t sbus_data;
 
 /* make some talons for drive train */
 std::string interface = "can0";
@@ -60,93 +51,6 @@ TalonFX talLeft2(5);
 
 double y = 0;
 double turn = 0;
-
-LLTrackingData getLLData(std::string LLIP){
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
-    while(1)
-    {
-        curl = curl_easy_init();
-        // Set remote URL.
-        const std::string url(LLIP);
-
-        // Response information.
-        long httpCode(0);
-        std::unique_ptr<std::string> httpData(new std::string());
-
-        // Don't bother trying IPv6, which would increase DNS resolution time.
-        curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
-        // Don't wait forever, time out after 10 seconds.
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
-
-        // Hook up data handling function.
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-        // Hook up data container (will be passed as the last parameter to the
-        // callback handling function).  Can be any pointer type, since it will
-        // internally be passed as a void pointer.
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
-
-        // Run our HTTP GET command, capture the HTTP response code, and clean up.
-        curl_easy_perform(curl);
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);   
-        
-        if (httpCode == 200)
-        {
-            //std::cout << "\nGot successful response from " << url << std::endl;
-
-            // Response looks good - done using Curl now.  Try to parse the results
-            // and print them out.
-            Json::Value jsonData;
-            Json::Reader jsonReader;
-
-            if (jsonReader.parse(*httpData.get(), jsonData))
-            {
-                //std::cout << "Successfully parsed JSON data" << std::endl;
-                //std::cout << "\nJSON data received:" << std::endl;
-                //std::cout << jsonData.toStyledString() << std::endl;
-
-                Data.fID = jsonData["Results"]["Fiducial"][0]["fID"].asInt();
-                // const std::string Results(jsonData["Results"].toStyledString());
-                // const std::string Bardcode(jsonData["Bardcode"].toStyledString());
-                // const std::string Classifier(jsonData["Classifier"].toStyledString());
-                // const std::string Detector(jsonData["Detector"].toStyledString());
-                //const std::string fID(jsonData["Fiducial"].asString());
-                Data.tx = jsonData["Results"]["Fiducial"][0]["tx"].asFloat();
-                Data.ty = jsonData["Results"]["Fiducial"][0]["ty"].asFloat();
-
-                const Json::Value& Fiducial = jsonData["Fiducial"]; // array of characters
-
-                std::cout << "Natively parsed:" << std::endl;
-                //std::cout << "\tResults: " << Results << std::endl;
-                //std::cout << "\tfID: " << Data.fID << std::endl;
-                //std::cout << "\ttx: " << Data.tx << std::endl;
-                //std::cout << "\tty: " << Data.ty << std::endl;
-                std::cout << std::endl;
-                return Data;
-            }
-            else
-            {
-                std::cout << "Could not parse HTTP data as JSON" << std::endl;
-                std::cout << "HTTP data was:\n" << *httpData.get() << std::endl;
-                return Data;
-            }
-        }
-        else
-        {
-            std::cout << "Couldn't GET from " << url << " - exiting" << std::endl;
-            return Data;
-        }
-
-    httpCode = 0;
-    curl_easy_cleanup(curl);
-    //return 0;
-    }
-}
 
 void initDrive()
 {
@@ -178,61 +82,29 @@ static void onPacket(const sbus_packet_t &packet)
 
     if (now - lastPrint > milliseconds(100))
     {
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i < 16; ++i){
             cout << "ch" << i + 1 << ": " << packet.channels[i] << "\t";
+            sbus_data.channels[i] = packet.channels[i];
+        }
 
         cout << "ch17: " << (packet.ch17 ? "true" : "false") << "\t"
              << "ch18: " << (packet.ch18 ? "true" : "false");
-			 
-		if ((packet.channels[2] - 980) > 100 || (packet.channels[1] - 980) > 100 || (packet.channels[2] - 980) < -100 || (packet.channels[1] - 980) < -100 ){	 
-			y = ((double)packet.channels[2] - 980) / 1000;
-			turn = ((double)packet.channels[1] - 980) / 1000;
-			drive(-y, turn);
-		} else if ((packet.channels[2] - 980) < 100 || (packet.channels[1] - 980) < 100 || (packet.channels[2] - 980) > -100 || (packet.channels[1] - 980) > -100 )
-        {
-            drive(0,0);
-        }
-
-		if(int (packet.channels[4]) > 900){
-			ctre::phoenix::unmanaged::Unmanaged::FeedEnable(100);
-			cout << "ENABLED" << endl;
-		}
-
-        if(int (packet.channels[5]) > 900){
-			ctre::phoenix::unmanaged::Unmanaged::FeedEnable(100);
-			cout << "VISON ENABLED" << endl;
-		}
-
-        if(int (packet.channels[12]) > 900){
-            getLLData("http://169.254.5.141:5807/results");
-            if (Data.tx > 5)
-            {
-                drive(0,0.1);
-            }
-            else if (Data.tx < -5)
-            {
-                drive(0,-0.1);
-            }
-            // else
-            // {
-            //     drive(0,0);
-            // }
-            cout << Data.fID << endl;
-            cout << Data.tx << endl;
-        }
+        sbus_data.ch17 = packet.ch17;
+        sbus_data.ch18 = packet.ch18;
 
         if (packet.frameLost){
             cout << "\tFrame lost";
-			drive(0,0);
 		}
+        sbus_data.frameLost = packet.frameLost;
         if (packet.failsafe){
             cout << "\tFailsafe active";
-			drive(0,0);
 		}
+        sbus_data.failsafe = packet.failsafe;
         cout << endl;
 
         lastPrint = now;
     }
+
 }
 
 int main(int argc, char **argv) {	
@@ -241,9 +113,10 @@ int main(int argc, char **argv) {
 
 	/* setup drive */
 	initDrive();
-	drive(0,0);
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	cout << "SBUS blocking receiver example" << endl;
+	drive(0,0); 
+    signal(SIGINT, handle_sig);
+    AHRS com = AHRS("/dev/ttyACM0");
+	sleepApp(2000);
 
     string ttyPath;
 
@@ -265,15 +138,80 @@ int main(int argc, char **argv) {
 
     // blocks until data is available
     while ((err = sbus.read()) != SBUS_FAIL)
-    {
+    {   
+        sleepApp(50);
         // desync means a packet was misaligned and not received properly
         if (err == SBUS_ERR_DESYNC)
         {
             cerr << "SBUS desync" << endl;
 			drive(0,0);
         }
-    }
+        else
+        {
+            sbus.onPacket(onPacket);
+            if ((sbus_data.channels[2] - 980) > 100 || (sbus_data.channels[1] - 980) > 100 || (sbus_data.channels[2] - 980) < -100 || (sbus_data.channels[1] - 980) < -100 ){	 
+                y = ((double)sbus_data.channels[2] - 980) / 1000;
+                turn = ((double)sbus_data.channels[1] - 980) / 1000;
+                drive(-y, turn);
+            } else if ((sbus_data.channels[2] - 980) < 100 || (sbus_data.channels[1] - 980) < 100 || (sbus_data.channels[2] - 980) > -100 || (sbus_data.channels[1] - 980) > -100 )
+            {
+                drive(0,0);
+            }
 
+            if(int (sbus_data.channels[4]) > 900){
+                ctre::phoenix::unmanaged::Unmanaged::FeedEnable(100);
+                cout << "ENABLED" << endl;
+            }
+
+            if(int (sbus_data.channels[11]) > 900){
+                LLTD::LLTrackingData Data = jsonReader.getLLData("http://169.254.5.141:5807/results");
+                if ((Data.fIDtx > 5) & (Data.fIDty < -5) & (Data.fID == 1))
+                {
+                    drive(-0.25,0.1);
+                }
+                else if ((Data.fIDtx < -5) & (Data.fIDty < -5) & (Data.fID == 1))
+                {
+                    drive(-0.25,-0.1);
+                }
+                else if ((Data.fIDtx > 5) & (Data.fID == 1))
+                {
+                    drive(0,0.1);
+                }
+                else if ((Data.fIDtx < -5) & (Data.fID == 1))
+                {
+                    drive(0,-0.1);
+                }
+                else if ((Data.fIDty < -5) & (Data.fID == 1))
+                {
+                    drive(-0.25,0);
+                }
+                else if ((Data.fIDtx < 5) & (Data.fIDty < 5) & (Data.fIDty > -5) & (Data.fIDtx > -5) & (Data.fID == 1))
+                {
+                    drive(0,0);
+                }
+                cout << Data.fID << endl;
+                cout << Data.fIDtx << endl;
+                cout << Data.fIDty << endl;
+                cout << Data.neuralClass << endl;
+                cout << Data.conf << endl;
+                cout << Data.neuraltx << endl;
+                cout << Data.neuralty << endl;
+            }
+
+            if(int (sbus_data.channels[6]) > 900)
+            {
+                std::cout << std::fixed << std::setprecision(2) << com.GetPitch() << "      " << com.GetRoll() << "   " << com.GetYaw() << "     " <<com.GetWorldLinearAccelX() << "     " << com.GetWorldLinearAccelY() << "       " << com.GetWorldLinearAccelZ() << "      " << com.GetLastSensorTimestamp() << "      " << '\r' << std::flush;
+            }
+
+            if (sbus_data.failsafe){
+                drive(0,0);
+		    }
+
+            if (sbus_data.frameLost){
+                drive(0,0);
+		    }
+        }       
+    }
     cerr << "SBUS error: " << err << endl;
 	drive(0,0);
     return err;

@@ -289,6 +289,15 @@ CMAKE_STRIP:FILEPATH=C:/msys64/mingw64/bin/strip.exe
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Value Computed by CMake
+NavXTimeStamp_BINARY_DIR:STATIC=C:/Users/Cody Raposa/OneDrive - Wentworth Institute of Technology/Desktop/Everything/UTAP Code/UCTOC-FRC-Bot-Without-FRC-Hardware/build/include/navXTimeSync
+
+//Value Computed by CMake
+NavXTimeStamp_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+NavXTimeStamp_SOURCE_DIR:STATIC=C:/Users/Cody Raposa/OneDrive - Wentworth Institute of Technology/Desktop/Everything/UTAP Code/UCTOC-FRC-Bot-Without-FRC-Hardware/CTRE-Phoenix-Stuff/include/navXTimeSync
+
 //The directory containing a CMake configuration file for SDL2.
 SDL2_DIR:PATH=SDL2_DIR-NOTFOUND
 
@@ -448,7 +457,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=3
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

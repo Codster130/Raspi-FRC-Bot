@@ -68,5 +68,8 @@
         "mutex": "cpp",
         "cinttypes": "cpp"
     },
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.includePath": [
+        "CTRE-Phoenix-Stuff\\include"
+    ]
 }
