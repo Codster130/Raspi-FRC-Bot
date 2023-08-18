@@ -4,7 +4,7 @@ PROJECT ( example C CXX )
 # Specify the minimum version for CMake
 cmake_minimum_required(VERSION 3.9)
 
-add_definitions(-std=c++17 -Wall -Wextra -Wno-switch)
+add_definitions(-std=c++17 -Wall -Wextra)
 
 # Set the output folder where your program will be created
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
@@ -12,12 +12,13 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
-find_package (Threads REQUIRED)
+find_package(Threads REQUIRED)
+find_package(jsoncpp REQUIRED)
+find_package(CURL REQUIRED)
 
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}/include"
                     "${PROJECT_SOURCE_DIR}/navXTimeSync")
-include_directories(~/restc-cpp/include/restc-cpp)
 add_subdirectory("raspberry-sbus")
 add_subdirectory(Read_Json)
 add_subdirectory(navXTimeSync)
