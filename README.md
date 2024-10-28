@@ -1,5 +1,7 @@
 # Raspi-FRC-Bot
 
+## **DISCLAIMER: THIS PROJECT ONLY SUPPORTS PHOENIX 5**
+
 This project is intended to take FRC Hardware (more specifically CAN devices from Cross the Road Electronics) and create a GitHub repository that is more or less plug-and-play for demo robots and teaching new team members how to program a robot. This project intends to remove all of the super specialty hardware that restricts how quickly one can turn on and connect to a robot and remove all costly hardware such as the RoboRIO.
 
 This project also eliminates the need for spending time connecting to and making sure all of the FRC measures are in place for things to work. By removing the RoboRIO we are eliminating the need for a laptop and radio. This also allows the user to have the peace of mind that no matter where they decide to set up, they will have a robust and safe connection to the robot without any wifi issues.
